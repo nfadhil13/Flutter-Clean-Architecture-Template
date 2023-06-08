@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uf_profielder_mobile/infrastructure/types/exceptions/base_exception.dart';
+import 'package:uf_profielder_mobile/infrastructure/types/exceptions/session_exception.dart';
 import 'package:uf_profielder_mobile/infrastructure/types/resource.dart';
 
 ///
@@ -29,11 +30,7 @@ abstract class Usecase<Params, Result> {
   }
 
   Future<Resource<Result>> handleError(Object e, StackTrace stackTrace) async {
-    if (e is! BaseException) {
-      return Resource.error<Result>(BaseException.unknownError());
-    }
-
-    return Resource.error(e);
+    return _handleError(e, stackTrace);
   }
 }
 
@@ -52,12 +49,18 @@ abstract class UsecaseNoParams<Result> {
   }
 
   Future<Resource<Result>> handleError(Object e, StackTrace stackTrace) async {
-    if (e is! BaseException) {
-      return Resource.error<Result>(BaseException.unknownError());
-    }
-
-    return Resource.error(e);
+    return _handleError(e, stackTrace);
   }
+}
+
+Future<Resource<Result>> _handleError<Result>(
+    Object e, StackTrace stackTrace) async {
+  if (e is SessionException) throw e;
+  if (e is! BaseException) {
+    return Resource.error<Result>(BaseException.unknownError());
+  }
+
+  return Resource.error(e);
 }
 
 extension DataToResouceExt<T extends dynamic> on Future<T> {

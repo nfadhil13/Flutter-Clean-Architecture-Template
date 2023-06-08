@@ -45,7 +45,7 @@ abstract class APIClient {
       Map<String, String>? headers,
       JSON? body,
       String? token,
-      JSON? query,
+      Map<String, dynamic>? query,
       bool shouldPrint = false,
       MockedResult? mockResult});
 
@@ -53,7 +53,7 @@ abstract class APIClient {
       {required String path,
       Map<String, String>? headers,
       required MapFromJSON<T> mapper,
-      JSON? query,
+      Map<String, dynamic>? query,
       bool shouldPrint = false,
       String? token,
       MockedResult? mockResult});
@@ -64,7 +64,7 @@ abstract class APIClient {
       Map<String, String>? headers,
       JSON? body,
       String? token,
-      JSON? query,
+      Map<String, dynamic>? query,
       bool shouldPrint = false,
       MockedResult? mockResult});
 
@@ -74,7 +74,7 @@ abstract class APIClient {
       Map<String, String>? headers,
       JSON? body,
       String? token,
-      JSON? query,
+      Map<String, dynamic>? query,
       bool shouldPrint = false,
       MockedResult? mockResult});
 }
@@ -87,13 +87,14 @@ class UFClient implements APIClient {
       required MapFromJSON<T> mapper,
       Map<String, String>? headers,
       JSON? body,
-      JSON? query,
+      Map<String, dynamic>? query,
       String? token,
       bool shouldPrint = false,
       MockedResult? mockResult}) async {
     try {
-      final uri = Uri.parse(buildFullUrl(path)).replace(queryParameters: query);
-      final finalHeader = _buildHeader(headers, token);
+      final uri = Uri.parse(buildFullUrl(path))
+          .replace(queryParameters: _buildQuery(query, token));
+      final finalHeader = _buildHeader(headers);
       final response = mockResult != null
           ? _mockResult(mockResult)
           : await http.post(
@@ -102,7 +103,7 @@ class UFClient implements APIClient {
               body: jsonEncode(body),
             );
       final result = _handleResponse(response, mapper, shouldPrint, path,
-          headers: finalHeader, body: body);
+          headers: finalHeader, body: body, query: query, token: token);
       return result;
     } catch (e) {
       rethrow;
@@ -115,12 +116,13 @@ class UFClient implements APIClient {
     Map<String, String>? headers,
     required MapFromJSON<T> mapper,
     MockedResult? mockResult,
-    JSON? query,
+    Map<String, dynamic>? query,
     String? token,
     bool shouldPrint = false,
   }) async {
-    final uri = Uri.parse(buildFullUrl(path)).replace(queryParameters: query);
-    final finalHeader = _buildHeader(headers, token);
+    final uri = Uri.parse(buildFullUrl(path))
+        .replace(queryParameters: _buildQuery(query, token));
+    final finalHeader = _buildHeader(headers);
     final response = mockResult != null
         ? _mockResult(mockResult)
         : await http.get(
@@ -128,7 +130,7 @@ class UFClient implements APIClient {
             headers: finalHeader,
           );
     return _handleResponse(response, mapper, shouldPrint, path,
-        headers: finalHeader);
+        headers: finalHeader, query: query, token: token);
   }
 
   @override
@@ -143,8 +145,9 @@ class UFClient implements APIClient {
     MockedResult? mockResult,
   }) async {
     try {
-      final uri = Uri.parse(buildFullUrl(path)).replace(queryParameters: query);
-      final finalHeader = _buildHeader(headers, token);
+      final uri = Uri.parse(buildFullUrl(path))
+          .replace(queryParameters: _buildQuery(query, token));
+      final finalHeader = _buildHeader(headers);
       final response = mockResult != null
           ? _mockResult(mockResult)
           : await http.delete(
@@ -152,14 +155,8 @@ class UFClient implements APIClient {
               headers: finalHeader,
               body: jsonEncode(body),
             );
-      final result = _handleResponse(
-        response,
-        mapper,
-        shouldPrint,
-        path,
-        headers: finalHeader,
-        body: body,
-      );
+      final result = _handleResponse(response, mapper, shouldPrint, path,
+          headers: finalHeader, body: body, query: query, token: token);
       return result;
     } catch (e) {
       rethrow;
@@ -178,8 +175,9 @@ class UFClient implements APIClient {
     MockedResult? mockResult,
   }) async {
     try {
-      final uri = Uri.parse(buildFullUrl(path)).replace(queryParameters: query);
-      final finalHeader = _buildHeader(headers, token);
+      final uri = Uri.parse(buildFullUrl(path))
+          .replace(queryParameters: _buildQuery(query, token));
+      final finalHeader = _buildHeader(headers);
       final response = mockResult != null
           ? _mockResult(mockResult)
           : await http.put(
@@ -188,32 +186,35 @@ class UFClient implements APIClient {
               body: jsonEncode(body),
             );
       final result = _handleResponse(response, mapper, shouldPrint, path,
-          headers: finalHeader, body: body);
+          headers: finalHeader, body: body, query: query, token: token);
       return result;
     } catch (e) {
       rethrow;
     }
   }
 
-  Map<String, String> _buildHeader(
-      Map<String, dynamic>? headers, String? token) {
+  Map<String, String> _buildHeader(Map<String, dynamic>? headers) {
     return {
       "Content-Type": "application/json",
       if (headers != null) ...headers,
-      if (token != null) 'Authorization': 'Bearer $token'
     };
   }
 
-  APIResult<T> _handleResponse<T>(
-    http.Response response,
-    MapFromJSON<T> mapper,
-    bool shouldPrint,
-    String url, {
-    Map<String, String>? headers,
-    JSON? body,
-  }) {
+  Map<String, dynamic>? _buildQuery(
+      Map<String, dynamic>? query, String? token) {
+    if (query == null && token == null) return null;
+    return {if (query != null) ...query, if (token != null) "token": token};
+  }
+
+  APIResult<T> _handleResponse<T>(http.Response response, MapFromJSON<T> mapper,
+      bool shouldPrint, String url,
+      {Map<String, String>? headers,
+      JSON? body,
+      Map<String, dynamic>? query,
+      String? token}) {
     if (shouldPrint) {
-      _printResponse(response, url, headers: headers, requestBody: body);
+      _printResponse(response, url,
+          headers: headers, requestBody: body, query: query, token: token);
     }
 
     final result = jsonDecode(response.body) as Map<String, dynamic>;
@@ -245,7 +246,10 @@ class UFClient implements APIClient {
   }
 
   void _printResponse(http.Response response, String url,
-      {dynamic requestBody, Map<String, String>? headers}) {
+      {dynamic requestBody,
+      Map<String, String>? headers,
+      Map<String, dynamic>? query,
+      String? token}) {
     if (kReleaseMode) return;
     debugPrint("====^^^^^^^^^^^^^^^===");
     debugPrint("URL : ${buildFullUrl(url)}");
@@ -253,6 +257,12 @@ class UFClient implements APIClient {
     if (headers != null) {
       debugPrint("====== Headers =====");
       _printJSONSafely(jsonEncode(headers));
+    }
+
+    final finalQuery = _buildQuery(query, token);
+    if (finalQuery != null) {
+      debugPrint("==== Queries ====");
+      _printJSONSafely(jsonEncode(finalQuery));
     }
 
     if (requestBody != null) {

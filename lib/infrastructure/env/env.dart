@@ -6,5 +6,7 @@ enum ENV {
 
   const ENV({required this.baseURL});
 
-  static const current = ENV.dev;
+  static ENV current = ENV.dev;
+
+  static void setEnv(ENV env) => current = env;
 }
