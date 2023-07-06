@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:uf_profielder_mobile/infrastructure/ext/ctx_ext.dart';
+import 'package:sizer/sizer.dart';
 
 class UFTextField extends StatelessWidget {
   final String label;
@@ -60,11 +61,10 @@ class UFTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = context.color;
+    final text = context.text;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Visibility(visible: label.isNotEmpty, child: Text(label)),
-        if (label.isNotEmpty) const SizedBox(height: 5.0),
         TextFormField(
           autofocus: autofocus ?? false,
           focusNode: focusNode,
@@ -76,34 +76,34 @@ class UFTextField extends StatelessWidget {
           obscureText: obscureText ?? false,
           validator: validator,
           controller: controller,
+          style: text.bodyLarge?.copyWith(fontWeight: FontWeight.normal),
           textInputAction: textInputAction,
           inputFormatters: inputFormatters,
           decoration: InputDecoration(
-            fillColor: color.onError,
-            filled: true,
             suffixIcon: suffixIcon,
             prefixIcon: prefixIcon,
+            labelText: label,
+            suffixIconColor: context.color.outline,
+            errorStyle: context.text.bodySmall
+                ?.copyWith(color: color.error, fontSize: 10.sp),
+            labelStyle: text.bodySmall,
+            alignLabelWithHint: false,
+            errorMaxLines: 3,
             errorBorder: OutlineInputBorder(
-              borderRadius: borderRadius,
-              borderSide: BorderSide(width: 1, color: color.error),
-            ),
+                borderRadius: borderRadius,
+                borderSide: BorderSide(color: color.error)),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: borderRadius,
-              borderSide: BorderSide(width: 1, color: color.error),
-            ),
+                borderRadius: borderRadius,
+                borderSide: BorderSide(color: color.error)),
+            focusedBorder: OutlineInputBorder(
+                borderRadius: borderRadius,
+                borderSide: BorderSide(color: color.primary)),
+            enabledBorder: OutlineInputBorder(
+                borderRadius: borderRadius,
+                borderSide: BorderSide(color: color.outline)),
             hintText: hintText,
-            // hintStyle: const TextStyle(
-            //     fontSize: 14, color: color.),
             contentPadding: contentPadding ??
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 17),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: borderRadius,
-              borderSide: BorderSide(width: 1, color: color.primary),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: borderRadius,
-              borderSide: BorderSide(width: 1, color: color.surfaceVariant),
-            ),
           ),
           onFieldSubmitted: onFieldSubmitted,
           keyboardType: inputType,

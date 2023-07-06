@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sizer/sizer.dart';
 import 'package:uf_profielder_mobile/infrastructure/architecutre/cubits/messenger/messenger_cubit.dart';
 import 'package:uf_profielder_mobile/infrastructure/architecutre/cubits/session/session_cubit.dart';
 import 'package:uf_profielder_mobile/infrastructure/architecutre/error_handler/global_errror_catcher.dart';
@@ -7,6 +8,7 @@ import 'package:uf_profielder_mobile/infrastructure/ext/ctx_ext.dart';
 import 'package:uf_profielder_mobile/infrastructure/routing/router.dart';
 import 'package:uf_profielder_mobile/infrastructure/service_locator/service_locator.dart';
 import 'package:uf_profielder_mobile/infrastructure/styles/color.dart';
+import 'package:uf_profielder_mobile/infrastructure/styles/text.dart';
 
 class UFProfielderApp extends StatelessWidget {
   final AppRouter appRouter;
@@ -23,25 +25,28 @@ class UFProfielderApp extends StatelessWidget {
           create: (context) => getIt<SessionCubit>(),
         ),
       ],
-      child: MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        routerDelegate: appRouter.delegate(),
-        builder: (context, child) {
-          return GlobalErrorCatcher(
-            child: UFMessengerListener(
-              child: child,
-            ),
-            onSessionExpire: () {
-              context.messenger.showErrorSnackbar("Session Expired");
-              context.logout();
-            },
-          );
-        },
-        routeInformationParser: appRouter.defaultRouteParser(),
-        theme: ThemeData(
-          colorScheme: UFTheme.lightScheme,
-        ),
-      ),
+      child: Sizer(builder: (context, _, __) {
+        return MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          routerDelegate: appRouter.delegate(),
+          builder: (context, child) {
+            return GlobalErrorCatcher(
+              child: UFMessengerListener(
+                child: child,
+              ),
+              onSessionExpire: () {
+                context.messenger.showErrorSnackbar("Session Expired");
+                context.logout();
+              },
+            );
+          },
+          routeInformationParser: appRouter.defaultRouteParser(),
+          theme: ThemeData(
+            textTheme: UFTextTheme.textTheme,
+            colorScheme: UFTheme.lightScheme,
+          ),
+        );
+      }),
     );
   }
 }

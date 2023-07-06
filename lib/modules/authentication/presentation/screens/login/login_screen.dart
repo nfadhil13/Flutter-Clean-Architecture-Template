@@ -3,7 +3,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sizer/sizer.dart';
-import 'package:uf_profielder_mobile/gen/assets.gen.dart';
 import 'package:uf_profielder_mobile/infrastructure/architecutre/cubits/messenger/messenger_cubit.dart';
 import 'package:uf_profielder_mobile/infrastructure/architecutre/cubits/session/session_cubit.dart';
 import 'package:uf_profielder_mobile/infrastructure/ext/ctx_ext.dart';
@@ -36,14 +35,6 @@ class LoginScreen extends StatelessWidget {
             },
             child: Stack(
               children: [
-                Container(
-                  width: double.infinity,
-                  height: double.infinity,
-                  decoration: BoxDecoration(
-                      image: DecorationImage(
-                          image: Assets.images.landingpage.provider(),
-                          fit: BoxFit.cover)),
-                ),
                 const Align(alignment: Alignment.center, child: _LoginForm()),
                 BlocConsumer<LoginCubit, LoginState>(
                   listener: (context, state) {
